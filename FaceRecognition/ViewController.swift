@@ -8,6 +8,7 @@
 
 import UIKit
 import Vision
+import CoreImage
 
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
@@ -19,11 +20,89 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
        
     }
     
+    func detect(img: UIImage) {
+        
+        guard let image = CIImage(image: img) else { return }
+
+        var orientation:Int32 = 0
+        
+        switch img.imageOrientation {
+        case .up:
+            orientation = 1
+            
+        case .right:
+            orientation = 6
+            
+        case .down:
+            orientation = 3
+            
+        case .left:
+            orientation = 8
+            
+        case .upMirrored:
+            orientation = 2
+            
+        case .downMirrored:
+            orientation = 4
+            
+        case .leftMirrored:
+            orientation = 5
+            
+        case .rightMirrored:
+            orientation = 7
+            
+        }
+        
+        let accurrency = [CIDetectorAccuracy : CIDetectorAccuracyHigh]
+        
+        let imgOptions = [
+            
+            CIDetectorSmile : true,
+            CIDetectorEyeBlink : true,
+            CIDetectorImageOrientation : orientation]
+            
+            as [String : Any]
+
+        let detector = CIDetector(ofType: CIDetectorTypeFace, context: nil, options: accurrency)
+
+        guard let faces = detector?.features(in: image, options: imgOptions) else { return }
+
+        if !faces.isEmpty {
+            
+            for face in faces as! [CIFaceFeature] {
+               
+                switch face {
+                    
+                case _ where face.hasSmile:
+                    alertInformation(title: "Atenção", message: "Tire a foto sem sorrir")
+                
+                case _ where face.leftEyeClosed:
+                    alertInformation(title: "Atenção", message: "Mantenha os olhos abertos")
+                
+                case _ where face.rightEyeClosed:
+                    alertInformation(title: "Atenção", message: "Mantenha os olhos abertos")
+                
+                default:
+                    alertInformation(title: "Otimo", message: "Sua foto foi aprovada")
+                    
+                }
+                
+            }
+            
+        } else {
+            
+            alertInformation(title: "Atenção", message: "Posicione a camera pro seu rosto.")
+            
+        }
+
+
+    }
+    
     func detectFace(img: UIImage) {
         
         var orientation:Int32 = 0
         
-        switch imgTaken.imageOrientation {
+        switch img.imageOrientation {
         case .up:
             orientation = 1
         case .right:
@@ -37,9 +116,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
         
         // vision
+//        let faceRectanglesRequest = VNDetectFaceRectanglesRequest(completionHandler: handleFaceFeatures)
         let faceLandmarksRequest = VNDetectFaceLandmarksRequest(completionHandler: handleFaceFeatures)
         let requestHandler = VNImageRequestHandler(cgImage: img.cgImage!, orientation: CGImagePropertyOrientation(rawValue: UInt32(orientation))! ,options: [:])
         do {
+//            try requestHandler.perform([faceRectanglesRequest])
             try requestHandler.perform([faceLandmarksRequest])
         } catch {
             print(error)
@@ -51,6 +132,21 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         guard let observations = request.results as? [VNFaceObservation] else {
             fatalError("unexpected result type!")
+        }
+     
+        for face in observations {
+           
+            guard let leftEye = face.landmarks?.leftEye else { return }
+            guard let rightEye = face.landmarks?.rightEye else { return }
+            guard let nose = face.landmarks?.nose else { return }
+            guard let smile = face.landmarks?.innerLips else { return }
+           
+            print(leftEye)
+//            print(rightEye)
+//            print(nose)
+//            print(smile)
+            
+            
         }
         
         if observations == [] {
@@ -68,7 +164,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         imgTaken = img
         
         dismiss(animated: true) {
-            self.detectFace(img: self.imgTaken)
+//            self.detectFace(img: self.imgTaken)
         }
         
     }
@@ -97,7 +193,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     @IBAction func detectFace(_ sender: Any) {
        
-        detectFace(img: imgTaken)
+//        detectFace(img: imgTaken)
+        detect(img: imgTaken)
         
 
     }

@@ -38,7 +38,7 @@
                                 <action selector="detectFace:" destination="BYZ-38-t0r" id="pcU-lj-HBv"/>
                             </connections>
                         </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="DiY-n6-wPn">
+                        <barButtonItem key="rightBarButtonItem" systemItem="camera" id="DiY-n6-wPn">
                             <connections>
                                 <action selector="takePic:" destination="BYZ-38-t0r" id="QSL-Ca-VR2"/>
                             </connections>
